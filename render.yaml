@@ -2,7 +2,10 @@ services:
   - type: web
     name: translator-app
     env: python
+    plan: free
     buildCommand: |
-      apt-get update && apt-get install -y portaudio19-dev
+      apt-get update
+      apt-get install -y portaudio19-dev
+      pip install --upgrade pip
       pip install -r requirements.txt
     startCommand: gunicorn app:app
