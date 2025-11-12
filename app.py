@@ -29,11 +29,10 @@ def translate_text():
     from_lang = data.get("from")
     to_lang = data.get("to")
     text = data.get("text")
-
     translated = translator.translate(text, src=from_lang, dest=to_lang)
     translated_text = translated.text
 
-   
+    # Convert translated text to speech
     tts = gTTS(text=translated_text, lang=to_lang, slow=False)
     filename = "static/speech.mp3"
     tts.save(filename)
@@ -44,25 +43,36 @@ def translate_text():
     })
 
 
+# ✅ Multilingual Voice Translation Route
 @app.route('/voice_translate', methods=['POST'])
 def voice_translate():
     recognizer = sr.Recognizer()
+    data = request.json
+    from_lang = data.get("from")
+    to_lang = data.get("to")
+
+    # Mapping of simple language codes to Google Speech Recognition codes
+    language_map = {
+        "en": "en-IN", "hi": "hi-IN", "kn": "kn-IN", "ta": "ta-IN", "te": "te-IN",
+        "ml": "ml-IN", "mr": "mr-IN", "gu": "gu-IN", "bn": "bn-IN", "ur": "ur-IN",
+    }
+    recognize_lang = language_map.get(from_lang, "en-IN")
 
     with sr.Microphone() as source:
         recognizer.adjust_for_ambient_noise(source)
-        print("🎤 Listening...")
+        print(f"🎤 Listening in {recognize_lang} ...")
         audio = recognizer.listen(source)
 
     try:
-       
-        text = recognizer.recognize_google(audio)
+        # Recognize speech in selected input language
+        text = recognizer.recognize_google(audio, language=recognize_lang)
         print("You said:", text)
 
-        to_lang = request.json.get("to")
-        translated = translator.translate(text, src="en", dest=to_lang)
+        # Translate from input language to target language
+        translated = translator.translate(text, src=from_lang, dest=to_lang)
         translated_text = translated.text
 
-        
+        # Convert translated text to speech
         tts = gTTS(text=translated_text, lang=to_lang, slow=False)
         filename = "static/speech.mp3"
         tts.save(filename)
